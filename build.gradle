@@ -4,7 +4,16 @@ version '0.1'
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'ru.nsu.networks.chirikhin.filetransfer.Main'
+task client(dependsOn:"classes", type: JavaExec) {
+    main = 'ru.nsu.networks.chirikhin.filetransfer.client.Main'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task  server(dependsOn:"classes", type: JavaExec) {
+    main = 'ru.nsu.networks.chirikhin.filetransfer.server.Main'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
 repositories {
     jcenter()
 }
