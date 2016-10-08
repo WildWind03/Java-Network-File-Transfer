@@ -23,7 +23,14 @@ public class Main {
         }
 
 
-        Server server = new Server(portInt);
+        Server server;
+        try {
+            server = new Server(portInt);
+        } catch (ServerInitException e) {
+            logger.error(e.getMessage());
+            return;
+        }
+
         Thread serverThread = new Thread(server);
         serverThread.start();
 
