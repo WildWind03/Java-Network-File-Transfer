@@ -1,6 +1,8 @@
 package ru.nsu.networks.chirikhin.filetransfer.client;
 
 import org.apache.log4j.Logger;
+import ru.nsu.networks.chirikhin.filetransfer.util.InvalidPortException;
+import ru.nsu.networks.chirikhin.filetransfer.util.Util;
 
 public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
@@ -15,5 +17,13 @@ public class Main {
         String pathToFile = args[0];
         String ip = args[1];
         String port = args[2];
+
+        try {
+            Client client = new Client(pathToFile, ip, Util.getPort(port));
+            Thread thread = new Thread(client);
+            thread.start();
+        } catch (Throwable e) {
+            logger.error(e.getMessage());
+        }
     }
 }

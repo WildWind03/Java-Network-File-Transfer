@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Client implements Runnable {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -18,6 +20,7 @@ public class Client implements Runnable {
 
     public Client(String pathToFile, String ip, int port) {
         file = new File(pathToFile);
+        logger.info("Current working dir: " + Paths.get(".").toAbsolutePath().normalize().toString());
         if (!file.exists()) {
             throw new IllegalArgumentException("This file doesn't exist");
         }
@@ -28,7 +31,7 @@ public class Client implements Runnable {
 
         try {
             socketChannel = SocketChannel.open();
-            socketChannel.bind(new InetSocketAddress(ip, port));
+            socketChannel.connect(new InetSocketAddress(ip, port));
         } catch (IOException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -38,19 +41,63 @@ public class Client implements Runnable {
     @Override
     public void run() {
         long size = file.length();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(SIZE_OF_LONG);
-        byteBuffer.putLong(size);
+        ByteBuffer byteBufferSize = ByteBuffer.allocate(SIZE_OF_LONG);
+        byteBufferSize.putLong(size);
+        byteBufferSize.flip();
+
+        String name = file.getName();
+        byte[] nameBytes = name.getBytes(Charset.forName("UTF-8"));
+
+        ByteBuffer byteBufferNameLength = ByteBuffer.allocate(4);
+        byteBufferNameLength.putInt(nameBytes.length);
+        byteBufferNameLength.flip();
+
+        ByteBuffer byteBufferName = ByteBuffer.allocate(nameBytes.length);
+        byteBufferName.put(nameBytes);
+        byteBufferName.flip();
 
         try {
+            byte[] fileBytes = Files.readAllBytes(file.toPath());
+            ByteBuffer byteBufferFile = ByteBuffer.allocate(fileBytes.length);
+            byteBufferFile.put(fileBytes);
+            byteBufferFile.flip();
+
             int countOfSentBytes = 0;
 
+            logger.info ("Start to write");
             while (countOfSentBytes < 8) {
-                countOfSentBytes+=socketChannel.write(byteBuffer);
+                countOfSentBytes += socketChannel.write(byteBufferSize);
             }
 
-            while (!Thread.currentThread().isInterrupted()) {
+            countOfSentBytes = 0;
 
+            while (countOfSentBytes < 4) {
+                countOfSentBytes += socketChannel.write(byteBufferNameLength);
             }
+
+            countOfSentBytes = 0;
+
+            while (countOfSentBytes < nameBytes.length) {
+                countOfSentBytes += socketChannel.write(byteBufferName);
+            }
+
+            countOfSentBytes = 0;
+
+            while(countOfSentBytes < fileBytes.length) {
+                countOfSentBytes += socketChannel.write(byteBufferFile);
+            }
+
+            int countOfReadBytes = 0;
+            ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+            while (countOfReadBytes < 4) {
+                countOfReadBytes += socketChannel.read(byteBuffer);
+            }
+
+            socketChannel.close();
+            System.out.println("The file is transferred");
+
+
+
         } catch (Throwable t) {
             logger.error(t.getMessage());
         }

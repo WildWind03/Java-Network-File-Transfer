@@ -46,26 +46,34 @@ public class Server implements Runnable{
                 selector.select();
 
                 Set<SelectionKey> selectionKeySet = selector.selectedKeys();
-                Iterator<SelectionKey> keyIterator = selectionKeySet.iterator();
 
-                while (keyIterator.hasNext()) {
-                    SelectionKey selectionKey = keyIterator.next();
+                Iterator<SelectionKey> iterator = selectionKeySet.iterator();
+                while (iterator.hasNext()) {
+                    SelectionKey selectionKey = iterator.next();
 
                     if (selectionKey.isAcceptable()) {
+                        logger.info("New client is accepted");
                         SocketChannel socketChannel = serverSocketChannel.accept();
 
                         socketChannel.configureBlocking(false);
 
                         SelectionKey newSelectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
-                        Client client = new Client();
+                        Client client = new Client(socketChannel);
                         long currentId = maxId++;
 
+
+                        clientHashMap.put(currentId, client);
                         newSelectionKey.attach(currentId);
                     } else {
                         if (selectionKey.isReadable()) {
-
+                            logger.info("Attempt to read");
+                            long clientId = (long) selectionKey.attachment();
+                            Client client = clientHashMap.get(clientId);
+                            client.letWork();
                         }
                     }
+
+                    iterator.remove();
                 }
             }
 
