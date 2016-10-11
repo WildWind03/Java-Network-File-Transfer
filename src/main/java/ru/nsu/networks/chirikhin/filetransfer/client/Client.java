@@ -46,7 +46,9 @@ public class Client implements Runnable {
         byteBufferSize.flip();
 
         String name = file.getName();
+        logger.info("Name: " + name);
         byte[] nameBytes = name.getBytes(Charset.forName("UTF-8"));
+        logger.info("Bytes for name: " + nameBytes.length);
 
         ByteBuffer byteBufferNameLength = ByteBuffer.allocate(4);
         byteBufferNameLength.putInt(nameBytes.length);
