@@ -69,7 +69,12 @@ public class Server implements Runnable{
                             logger.info("Attempt to read");
                             long clientId = (long) selectionKey.attachment();
                             Client client = clientHashMap.get(clientId);
-                            client.letWork();
+
+                            if (client.letWork()) {
+                                client.confirmReceiving();
+                                clientHashMap.remove(clientId);
+                                selectionKey.cancel();
+                            }
                         }
                     }
 

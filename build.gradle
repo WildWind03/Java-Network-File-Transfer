@@ -7,7 +7,7 @@ apply plugin: 'application'
 task client(dependsOn:"classes", type: JavaExec) {
     main = 'ru.nsu.networks.chirikhin.filetransfer.client.Main'
     classpath = sourceSets.main.runtimeClasspath
-    args = ['./testFile.txt', '127.0.0.1', '12345']
+    args = ['./1.jpeg', '127.0.0.1', '12345']
 }
 
 task  server(dependsOn:"classes", type: JavaExec) {
