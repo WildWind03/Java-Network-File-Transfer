@@ -15,7 +15,7 @@ public class Client {
 
     private static final int SIZE_OF_LONG = 8;
     private static final int SIZE_OF_INT = 4;
-    private static final int SIZE_OF_FILE_BUFFER = 1024;
+    private static final int SIZE_OF_FILE_BUFFER = 4;
     private static final String UPLOADS_PATH = "./uploads/";
     private static final int CONFIRM_NUMBER = 1634;
     private static final int CAN_RECEIVE_FILE_NUMBER = 1871;
@@ -55,7 +55,7 @@ public class Client {
         }
     }
 
-    public boolean letWork() throws ReadFromBufferException {
+    public boolean letWork() throws ReadFromBufferException, CanNotReceiveFileException {
         logger.info("Client started to work");
         if (!isInfoAboutFileIsWritten) {
             ByteBuffer bufferForSizeOfFile = ByteBuffer.allocate(SIZE_OF_LONG);
@@ -96,6 +96,14 @@ public class Client {
                 ByteBuffer bufferForErrorNumber = ByteBuffer.allocate(SIZE_OF_INT);
                 if (Files.exists(Paths.get(UPLOADS_PATH + filename))) {
                     bufferForErrorNumber.putInt(CAN_NOT_RECEIVE_FILE_NUMBER);
+
+                    bufferForErrorNumber.flip();
+                    while (countOfWrittenBytes < SIZE_OF_INT) {
+                        countOfWrittenBytes += socketChannel.write(bufferForErrorNumber);
+                    }
+
+                    throw new CanNotReceiveFileException("Can not receive file. File with such name exists");
+
                 } else {
                     bufferForErrorNumber.putInt(CAN_RECEIVE_FILE_NUMBER);
                 }
@@ -109,6 +117,9 @@ public class Client {
                 fileChannel = randomAccessFile.getChannel();
                 fileByteBuffer = ByteBuffer.allocate(SIZE_OF_FILE_BUFFER);
                 isInfoAboutFileIsWritten = true;
+
+            } catch (CanNotReceiveFileException canNotReceiveFileException) {
+                throw canNotReceiveFileException;
 
             } catch (Throwable e) {
                 throw new ReadFromBufferException(e.getMessage(), e);

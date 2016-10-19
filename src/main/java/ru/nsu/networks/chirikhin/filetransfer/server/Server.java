@@ -70,10 +70,20 @@ public class Server implements Runnable{
                             long clientId = (long) selectionKey.attachment();
                             Client client = clientHashMap.get(clientId);
 
-                            if (client.letWork()) {
-                                client.confirmReceiving();
-                                clientHashMap.remove(clientId);
-                                selectionKey.cancel();
+                            try {
+                                if (client.letWork()) {
+                                    client.confirmReceiving();
+                                    clientHashMap.remove(clientId);
+                                    selectionKey.cancel();
+                                }
+                            } catch (Throwable t) {
+                                if (t instanceof CanNotReceiveFileException) {
+                                    logger.info ("The client will be deleted. Server can not receive the file");
+                                    clientHashMap.remove(clientId);
+                                    selectionKey.cancel();
+                                }
+
+                                logger.error(t.getMessage());
                             }
                         }
                     }

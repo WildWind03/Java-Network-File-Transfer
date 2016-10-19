@@ -16,10 +16,10 @@ public class Client implements Runnable {
 
     private static final int SIZE_OF_LONG = 8;
     private static final int SIZE_OF_INT = 4;
-    private static final int SIZE_OF_FILE_BUFFER = 1024;
+    private static final int SIZE_OF_FILE_BUFFER = 4;
 
     private static final int CONFIRM_NUMBER = 1634;
-    private static final int NO_ERROR = 1871;
+    private static final int NO_ERROR_NUMBER = 1871;
 
     private final File file;
     private final SocketChannel socketChannel;
@@ -47,6 +47,7 @@ public class Client implements Runnable {
     @Override
     public void run() {
         long size = file.length();
+
         ByteBuffer byteBufferSize = ByteBuffer.allocate(SIZE_OF_LONG);
         byteBufferSize.putLong(size);
         byteBufferSize.flip();
@@ -65,7 +66,7 @@ public class Client implements Runnable {
         byteBufferName.flip();
 
         try {
-            logger.info ("Start to write");
+            logger.info ("Start to write information about the file");
 
             int countOfSentBytes = 0;
             while (countOfSentBytes < SIZE_OF_LONG) {
@@ -90,7 +91,7 @@ public class Client implements Runnable {
             byteBufferForError.flip();
             int errorCode = byteBufferForError.asIntBuffer().get();
 
-            if (NO_ERROR != errorCode) {
+            if (NO_ERROR_NUMBER != errorCode) {
                 logger.error("Can not send file. Error from server");
                 return;
             }
@@ -113,13 +114,11 @@ public class Client implements Runnable {
                     if (countOfReadSymbols < 0) {
                         maxBufferFilling = countOfReadBytesFromFile;
                         isContinue = false;
-                        logger.info ("End of file");
+                        logger.info ("End of the file");
                     } else {
                         countOfReadBytesFromFile += countOfReadSymbols;
                     }
                 }
-
-                logger.info("Have read from file");
 
                 byteBufferFile.flip();
 
@@ -129,8 +128,6 @@ public class Client implements Runnable {
                 }
 
                 byteBufferFile.clear();
-
-                logger.info ("Next Step");
             }
 
             logger.info("File channel is closed");
