@@ -72,7 +72,6 @@ public class Server implements Runnable{
 
                             try {
                                 if (client.letWork()) {
-                                    client.confirmReceiving();
                                     clientHashMap.remove(clientId);
                                     selectionKey.cancel();
                                 }
