@@ -134,7 +134,6 @@ public class Client {
                 logger.info("Start to read file");
                 while (countOfReadBytes < maxSizeOfData) {
                     int actualReadBytes = socketChannel.read(fileByteBuffer);
-                    logger.info("Have read " + actualReadBytes + " bytes");
 
                     if (actualReadBytes < 0) {
                         maxSizeOfData = countOfReadBytes;
@@ -150,8 +149,6 @@ public class Client {
                         }
                     }
                 }
-
-                logger.info("Have read from socket");
 
                 fileByteBuffer.flip();
 
