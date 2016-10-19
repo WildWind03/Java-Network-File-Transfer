@@ -100,7 +100,7 @@ public class Client implements Runnable {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file.getName(), "r");
             FileChannel fileChannel = randomAccessFile.getChannel();
 
-            int countOfReadBytesFromFile = 0;
+            int countOfReadBytesFromFile;
             int maxBufferFilling = SIZE_OF_FILE_BUFFER;
             boolean isContinue = true;
 

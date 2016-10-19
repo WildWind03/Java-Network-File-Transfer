@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -16,6 +18,8 @@ public class Client {
     private static final int SIZE_OF_FILE_BUFFER = 1024;
     private static final String UPLOADS_PATH = "./uploads/";
     private static final int CONFIRM_NUMBER = 1634;
+    private static final int CAN_RECEIVE_FILE_NUMBER = 1871;
+    private static final int CAN_NOT_RECEIVE_FILE_NUMBER = 1872;
 
     private final SocketChannel socketChannel;
     private ByteBuffer fileByteBuffer;
@@ -86,6 +90,20 @@ public class Client {
                 byte[] filenameBytes = bufferForFilename.array();
                 String filename = new String(filenameBytes, Charset.forName("UTF-8"));
                 logger.info("Filename is " + filename);
+
+
+                int countOfWrittenBytes = 0;
+                ByteBuffer bufferForErrorNumber = ByteBuffer.allocate(SIZE_OF_INT);
+                if (Files.exists(Paths.get(UPLOADS_PATH + filename))) {
+                    bufferForErrorNumber.putInt(CAN_NOT_RECEIVE_FILE_NUMBER);
+                } else {
+                    bufferForErrorNumber.putInt(CAN_RECEIVE_FILE_NUMBER);
+                }
+
+                bufferForErrorNumber.flip();
+                while (countOfWrittenBytes < SIZE_OF_INT) {
+                    countOfWrittenBytes += socketChannel.write(bufferForErrorNumber);
+                }
 
                 randomAccessFile = new RandomAccessFile(UPLOADS_PATH + filename, "rw");
                 fileChannel = randomAccessFile.getChannel();
