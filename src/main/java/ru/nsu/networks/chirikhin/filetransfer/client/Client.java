@@ -19,6 +19,7 @@ public class Client implements Runnable {
     private static final int SIZE_OF_FILE_BUFFER = 1024;
 
     private static final int CONFIRM_NUMBER = 1634;
+    private static final int NO_ERROR = 1871;
 
     private final File file;
     private final SocketChannel socketChannel;
@@ -55,7 +56,7 @@ public class Client implements Runnable {
         byte[] nameBytes = name.getBytes(Charset.forName("UTF-8"));
         logger.info("Bytes for name: " + nameBytes.length);
 
-        ByteBuffer byteBufferNameLength = ByteBuffer.allocate(4);
+        ByteBuffer byteBufferNameLength = ByteBuffer.allocate(SIZE_OF_INT);
         byteBufferNameLength.putInt(nameBytes.length);
         byteBufferNameLength.flip();
 
@@ -64,10 +65,9 @@ public class Client implements Runnable {
         byteBufferName.flip();
 
         try {
-            int countOfSentBytes = 0;
-
             logger.info ("Start to write");
 
+            int countOfSentBytes = 0;
             while (countOfSentBytes < SIZE_OF_LONG) {
                 countOfSentBytes += socketChannel.write(byteBufferSize);
             }
@@ -82,12 +82,25 @@ public class Client implements Runnable {
                 countOfSentBytes += socketChannel.write(byteBufferName);
             }
 
+            ByteBuffer byteBufferForError = ByteBuffer.allocate(SIZE_OF_INT);
+            countOfSentBytes = 0;
+            while (countOfSentBytes < SIZE_OF_INT) {
+                countOfSentBytes += socketChannel.read(byteBufferForError);
+            }
+            byteBufferForError.flip();
+            int errorCode = byteBufferForError.asIntBuffer().get();
+
+            if (NO_ERROR != errorCode) {
+                logger.error("Can not send file. Error from server");
+                return;
+            }
+
             logger.info("Start to write the file");
             ByteBuffer byteBufferFile = ByteBuffer.allocate(SIZE_OF_FILE_BUFFER);
             RandomAccessFile randomAccessFile = new RandomAccessFile(file.getName(), "r");
             FileChannel fileChannel = randomAccessFile.getChannel();
 
-            int countOfReadBytesFromFile;
+            int countOfReadBytesFromFile = 0;
             int maxBufferFilling = SIZE_OF_FILE_BUFFER;
             boolean isContinue = true;
 
