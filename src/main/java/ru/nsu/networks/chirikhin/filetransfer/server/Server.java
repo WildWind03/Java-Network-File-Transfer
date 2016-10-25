@@ -75,14 +75,11 @@ public class Server implements Runnable{
                                     clientHashMap.remove(clientId);
                                     selectionKey.cancel();
                                 }
-                            } catch (Throwable t) {
-                                if (t instanceof CanNotReceiveFileException) {
+                            } catch (CanNotReceiveFileException t) {
                                     logger.info ("The client will be deleted. Server can not receive the file");
                                     clientHashMap.remove(clientId);
                                     selectionKey.cancel();
-                                }
-
-                                logger.error(t.getMessage());
+                                    logger.error(t.getMessage());
                             }
                         }
                     }

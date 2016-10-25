@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Client {
@@ -91,10 +92,10 @@ public class Client {
                         byte[] filenameBytes = byteBufferName.array();
                         String filename = new String(filenameBytes, Charset.forName("UTF-8"));
                         logger.info("Filename is " + filename);
+                        filename = Paths.get(filename).getFileName().toString();
 
                         if (Files.exists(Paths.get(UPLOADS_PATH + filename))) {
                             byteBufferErrorNumber.putInt(CAN_NOT_RECEIVE_FILE_NUMBER);
-
                         } else {
                             byteBufferErrorNumber.putInt(CAN_RECEIVE_FILE_NUMBER);
                         }
@@ -116,7 +117,10 @@ public class Client {
 
                     break;
                 case SEND_ERROR_REPORT:
-                    socketChannel.write(byteBufferErrorNumber);
+
+                    while (byteBufferErrorNumber.hasRemaining()) {
+                        socketChannel.write(byteBufferErrorNumber);
+                    }
 
                     if (byteBufferErrorNumber.position() == byteBufferErrorNumber.capacity()) {
                         clientState = ClientState.GET_FILE;
@@ -140,7 +144,10 @@ public class Client {
 
                     break;
                 case SEND_CONFIRM:
-                    socketChannel.write(byteBufferConfirm);
+
+                    while (byteBufferConfirm.hasRemaining()) {
+                        socketChannel.write(byteBufferConfirm);
+                    }
 
                     if (byteBufferConfirm.position() == byteBufferConfirm.capacity()) {
                         return true;
